@@ -36,4 +36,7 @@ app.prepare().then(async () => {
   }).listen(port, () => {
     console.log(`[server] Ready on http://localhost:${port}`)
   })
+}).catch((err) => {
+  console.error('[server] Failed to prepare Next.js app:', err)
+  process.exit(1)
 })

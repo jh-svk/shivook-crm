@@ -17,10 +17,13 @@ export async function PATCH(
     return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 })
   }
 
-  const lead = await db.lead.update({
-    where: { id: params.id },
-    data,
-  })
-
-  return NextResponse.json(lead)
+  try {
+    const lead = await db.lead.update({ where: { id: params.id }, data })
+    return NextResponse.json(lead)
+  } catch (err: unknown) {
+    if ((err as { code?: string }).code === 'P2025') {
+      return NextResponse.json({ error: 'Lead not found' }, { status: 404 })
+    }
+    throw err
+  }
 }

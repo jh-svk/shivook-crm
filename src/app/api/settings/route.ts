@@ -5,7 +5,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json()
   const { slackWebhookUrl } = body
 
-  if (typeof slackWebhookUrl !== 'string') {
+  if (typeof slackWebhookUrl !== 'string' || slackWebhookUrl.trim() === '') {
     return NextResponse.json({ error: 'slackWebhookUrl required' }, { status: 400 })
   }
 
