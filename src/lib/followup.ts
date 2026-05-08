@@ -11,15 +11,14 @@ export function isDueToday(scheduledFor: Date): boolean {
 export async function runFollowupChecker(): Promise<void> {
   console.log('[followup] Starting follow-up check at', new Date().toISOString())
 
-  const pendingReminders = await db.followUpReminder.findMany({
+  const dueReminders = await db.followUpReminder.findMany({
     where: {
       sentAt: null,
       stageDay: { in: [3, 10, 18] },
+      scheduledFor: { lte: new Date() },
     },
     include: { lead: true },
   })
-
-  const dueReminders = pendingReminders.filter((r) => isDueToday(r.scheduledFor))
   console.log(`[followup] ${dueReminders.length} reminders due`)
 
   for (const reminder of dueReminders) {
@@ -50,11 +49,6 @@ export async function runFollowupChecker(): Promise<void> {
       continue
     }
 
-    await db.followUpReminder.update({
-      where: { id: reminder.id },
-      data: { draftMessage: draft },
-    })
-
     try {
       await sendFollowUpReminder({
         leadName: lead.name,
@@ -68,7 +62,7 @@ export async function runFollowupChecker(): Promise<void> {
       })
       await db.followUpReminder.update({
         where: { id: reminder.id },
-        data: { sentAt: new Date() },
+        data: { draftMessage: draft, sentAt: new Date() },
       })
       console.log(`[followup] Sent Day ${reminder.stageDay} reminder for ${lead.name}`)
     } catch (err) {
