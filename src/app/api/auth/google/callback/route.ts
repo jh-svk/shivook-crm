@@ -9,7 +9,13 @@ export async function GET(req: NextRequest) {
   }
 
   const client = createOAuthClient()
-  const { tokens } = await client.getToken(code)
+  let tokens: Awaited<ReturnType<typeof client.getToken>>['tokens']
+  try {
+    const result = await client.getToken(code)
+    tokens = result.tokens
+  } catch {
+    return NextResponse.redirect(new URL('/settings?error=token_exchange_failed', req.url))
+  }
 
   if (!tokens.access_token || !tokens.refresh_token) {
     return NextResponse.redirect(new URL('/settings?error=no_tokens', req.url))

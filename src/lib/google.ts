@@ -39,6 +39,7 @@ export async function getAuthedClient() {
         data: {
           accessToken: tokens.access_token,
           expiry: new Date(tokens.expiry_date ?? Date.now() + 3600 * 1000),
+          ...(tokens.refresh_token && { refreshToken: tokens.refresh_token }),
         },
       })
     }
