@@ -23,7 +23,6 @@
   "devDependencies": {
     "@types/jest": "^30.0.0",
     "@types/node": "^20",
-    "@types/node-cron": "^3.0.11",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "jest": "^30.4.0",
