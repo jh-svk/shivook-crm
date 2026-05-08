@@ -52,3 +52,47 @@ export async function isGoogleConnected(): Promise<boolean> {
   const token = await db.googleToken.findUnique({ where: { id: 1 } })
   return token !== null
 }
+
+export type CalendarEvent = {
+  id: string
+  summary: string
+  start: { dateTime: string }
+  end: { dateTime: string }
+  attachments?: Array<{
+    fileId: string
+    mimeType: string
+    title?: string
+  }>
+}
+
+export async function fetchRecentCalendarEvents(): Promise<CalendarEvent[]> {
+  const client = await getAuthedClient()
+  const calendar = google.calendar({ version: 'v3', auth: client })
+
+  const now = new Date()
+  const threeHoursAgo = new Date(now.getTime() - 3 * 60 * 60 * 1000)
+
+  const response = await calendar.events.list({
+    calendarId: 'primary',
+    timeMin: threeHoursAgo.toISOString(),
+    timeMax: now.toISOString(),
+    singleEvents: true,
+    orderBy: 'startTime',
+    supportsAttachments: true,
+    fields: 'items(id,summary,start,end,attachments)',
+  })
+
+  return (response.data.items ?? []) as CalendarEvent[]
+}
+
+export async function readGoogleDoc(fileId: string): Promise<string> {
+  const client = await getAuthedClient()
+  const drive = google.drive({ version: 'v3', auth: client })
+
+  const response = await drive.files.export(
+    { fileId, mimeType: 'text/plain' },
+    { responseType: 'text' }
+  )
+
+  return response.data as string
+}
