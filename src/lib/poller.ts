@@ -82,12 +82,18 @@ async function processEvent(event: CalendarEvent): Promise<void> {
   const durationMs = new Date(event.end.dateTime).getTime() - callDate.getTime()
   const durationMinutes = Math.round(durationMs / 60000)
 
-  const classification = await classifyCall({
-    eventTitle: event.summary,
-    startTime: event.start.dateTime,
-    durationMinutes,
-    transcript,
-  })
+  let classification: Awaited<ReturnType<typeof classifyCall>>
+  try {
+    classification = await classifyCall({
+      eventTitle: event.summary,
+      startTime: event.start.dateTime,
+      durationMinutes,
+      transcript,
+    })
+  } catch (err) {
+    console.error(`[poller] Classification failed for event ${event.id}:`, err)
+    return
+  }
 
   await db.processedEvent.create({ data: { googleEventId: event.id } })
 
@@ -125,7 +131,13 @@ async function processEvent(event: CalendarEvent): Promise<void> {
     estimatedDealSize: lead.estimatedDealSize,
   }
 
-  const day0Draft = await generateDraft(draftInput)
+  let day0Draft: string
+  try {
+    day0Draft = await generateDraft(draftInput)
+  } catch (err) {
+    console.error(`[poller] Failed to generate Day 0 draft for lead ${lead.id}:`, err)
+    day0Draft = ''
+  }
 
   try {
     await sendFollowUpReminder({
