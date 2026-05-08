@@ -33,3 +33,15 @@ describe('extractDocAttachment', () => {
     expect(extractDocAttachment(attachments)).toBeNull()
   })
 })
+
+import { scheduleFollowUpDates } from '@/lib/poller'
+
+describe('scheduleFollowUpDates', () => {
+  it('returns correct dates for each follow-up stage', () => {
+    const callDate = new Date('2026-05-08T14:00:00Z')
+    const dates = scheduleFollowUpDates(callDate)
+    expect(dates[3].toISOString().startsWith('2026-05-11')).toBe(true)
+    expect(dates[10].toISOString().startsWith('2026-05-18')).toBe(true)
+    expect(dates[18].toISOString().startsWith('2026-05-26')).toBe(true)
+  })
+})
