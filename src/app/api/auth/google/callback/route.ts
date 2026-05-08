@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
   }
 
   const client = createOAuthClient()
-  let tokens: Awaited<ReturnType<typeof client.getToken>>['tokens']
+  let tokens: { access_token?: string | null; refresh_token?: string | null; expiry_date?: number | null }
   try {
     const result = await client.getToken(code)
     tokens = result.tokens

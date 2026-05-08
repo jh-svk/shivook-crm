@@ -1,11 +1,14 @@
 'use client'
 import { useState, useEffect } from 'react'
 
+export const dynamic = 'force-dynamic'
+
 export default function SettingsPage() {
   const [slackUrl, setSlackUrl] = useState('')
   const [saving, setSaving] = useState(false)
   const [syncing, setSyncing] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [saveError, setSaveError] = useState(false)
   const [syncMsg, setSyncMsg] = useState('')
   const [googleConnected, setGoogleConnected] = useState<boolean | null>(null)
 
@@ -18,14 +21,22 @@ export default function SettingsPage() {
 
   const saveSettings = async () => {
     setSaving(true)
-    await fetch('/api/settings', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ slackWebhookUrl: slackUrl }),
-    })
-    setSaving(false)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+    setSaveError(false)
+    try {
+      const r = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slackWebhookUrl: slackUrl }),
+      })
+      if (!r.ok) throw new Error('Save failed')
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    } catch {
+      setSaveError(true)
+      setTimeout(() => setSaveError(false), 3000)
+    } finally {
+      setSaving(false)
+    }
   }
 
   const manualSync = async () => {
@@ -73,9 +84,12 @@ export default function SettingsPage() {
           placeholder="https://hooks.slack.com/services/..."
           className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-300 mb-3"
         />
-        <button onClick={saveSettings} disabled={saving} className="bg-slate-900 text-white text-sm font-medium px-5 py-2 rounded-lg disabled:opacity-50">
-          {saved ? 'Saved!' : saving ? 'Saving...' : 'Save'}
-        </button>
+        <div className="flex items-center gap-3">
+          <button onClick={saveSettings} disabled={saving} className="bg-slate-900 text-white text-sm font-medium px-5 py-2 rounded-lg disabled:opacity-50">
+            {saved ? 'Saved!' : saving ? 'Saving...' : 'Save'}
+          </button>
+          {saveError && <span className="text-xs text-red-600">Save failed. Try again.</span>}
+        </div>
       </div>
 
       <div className="bg-white rounded-xl border border-slate-200 p-5">

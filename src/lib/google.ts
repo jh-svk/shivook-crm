@@ -78,7 +78,6 @@ export async function fetchRecentCalendarEvents(): Promise<CalendarEvent[]> {
     timeMax: now.toISOString(),
     singleEvents: true,
     orderBy: 'startTime',
-    supportsAttachments: true,
     fields: 'items(id,summary,start,end,attachments)',
   })
 

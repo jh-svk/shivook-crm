@@ -34,26 +34,39 @@ const STAGE_LABEL: Record<number, string> = {
   18: 'Day 18 - Breakup message',
 }
 
+const STATUS_STYLES: Record<string, string> = {
+  active: 'bg-green-100 text-green-700',
+  won: 'bg-blue-100 text-blue-700',
+  lost: 'bg-slate-100 text-slate-500',
+}
+
 export default function LeadDetail({ lead }: { lead: Lead }) {
   const [status, setStatus] = useState(lead.status)
   const [notes, setNotes] = useState(lead.notes ?? '')
   const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const [saveError, setSaveError] = useState(false)
   const [showTranscript, setShowTranscript] = useState(false)
 
   const save = async () => {
     setSaving(true)
-    await fetch(`/api/leads/${lead.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status, notes }),
-    })
-    setSaving(false)
-  }
-
-  const STATUS_STYLES: Record<string, string> = {
-    active: 'bg-green-100 text-green-700',
-    won: 'bg-blue-100 text-blue-700',
-    lost: 'bg-slate-100 text-slate-500',
+    setSaved(false)
+    setSaveError(false)
+    try {
+      const r = await fetch(`/api/leads/${lead.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status, notes }),
+      })
+      if (!r.ok) throw new Error('Save failed')
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    } catch {
+      setSaveError(true)
+      setTimeout(() => setSaveError(false), 3000)
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -118,13 +131,14 @@ export default function LeadDetail({ lead }: { lead: Lead }) {
         </div>
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex items-center gap-3">
         <button onClick={save} disabled={saving} className="bg-slate-900 text-white text-sm font-medium px-5 py-2 rounded-lg disabled:opacity-50">
-          {saving ? 'Saving...' : 'Save Changes'}
+          {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Changes'}
         </button>
         <a href={lead.transcriptUrl} target="_blank" rel="noopener noreferrer" className="bg-slate-100 text-slate-600 text-sm font-medium px-5 py-2 rounded-lg">
           View Transcript Doc
         </a>
+        {saveError && <span className="text-xs text-red-600">Save failed. Try again.</span>}
       </div>
 
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">

@@ -21,10 +21,14 @@ const DAY_COLORS: Record<number, string> = {
 export default function RemindersPanel({ reminders }: { reminders: Reminder[] }) {
   const [copied, setCopied] = useState<string | null>(null)
 
-  const copyDraft = (id: string, text: string) => {
-    navigator.clipboard.writeText(text)
-    setCopied(id)
-    setTimeout(() => setCopied(null), 2000)
+  const copyDraft = async (id: string, text: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(id)
+      setTimeout(() => setCopied(null), 2000)
+    } catch {
+      // clipboard unavailable (e.g. non-HTTPS) — no-op
+    }
   }
 
   if (reminders.length === 0) return null
