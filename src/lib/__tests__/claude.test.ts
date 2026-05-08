@@ -78,3 +78,36 @@ describe('parseClassificationResponse', () => {
     expect(parseClassificationResponse(raw).isSalesCall).toBe(false)
   })
 })
+
+import { buildDraftPrompt } from '@/lib/claude'
+
+describe('buildDraftPrompt', () => {
+  it('includes stage goal for Day 0', () => {
+    const { systemPrompt, userMessage } = buildDraftPrompt({
+      leadName: 'Sarah Kim',
+      company: 'Brightleaf',
+      stageDay: 0,
+      callSummary: 'Sarah runs a skincare brand and is interested in a PDP build.',
+      objections: ['price'],
+      estimatedDealSize: '$1,500 PDP',
+    })
+    expect(userMessage).toContain('Day 0')
+    expect(userMessage).toContain('Sarah Kim')
+    expect(userMessage).toContain('price')
+    expect(systemPrompt).toContain('em-dash')
+    expect(systemPrompt).toContain('guarantee')
+  })
+
+  it('does not mention guarantee for Day 3', () => {
+    const { userMessage } = buildDraftPrompt({
+      leadName: 'Marcus',
+      company: 'PureRoots',
+      stageDay: 3,
+      callSummary: 'Interested in retainer.',
+      objections: [],
+      estimatedDealSize: '$3,500/mo',
+    })
+    expect(userMessage).not.toContain('guarantee')
+    expect(userMessage).toContain('Day 3')
+  })
+})

@@ -97,3 +97,63 @@ export async function classifyCall(input: ClassificationInput): Promise<Classifi
   const text = response.content[0].type === 'text' ? response.content[0].text : ''
   return parseClassificationResponse(text)
 }
+
+export type DraftInput = {
+  leadName: string
+  company: string
+  stageDay: 0 | 3 | 10 | 18
+  callSummary: string
+  objections: string[]
+  estimatedDealSize: string | null
+}
+
+const STAGE_GOALS: Record<number, string> = {
+  0: 'Ask for the decision directly. Mention the guarantee: 10% revenue lift in 30 days or full refund. This is the most direct message.',
+  3: 'Short, low-pressure check-in. Offer to answer any questions or objections.',
+  10: 'Add value with a brief reference to a result or case study from a similar client.',
+  18: 'Clean breakup message. Honest, no guilt, leave the door open.',
+}
+
+const DRAFT_SYSTEM = `You are writing a follow-up message for Jacob Elbaum, CEO of Shivook CRO agency. Shivook's core offer includes a guarantee: 10% revenue lift in 30 days or full refund. Only mention the guarantee when the stage goal explicitly says to.
+
+VOICE RULES (strictly enforced):
+- Start with "Hey [name]"
+- Direct and casual-professional
+- Never use em-dashes (the — character or -- sequence)
+- No emojis
+- No "I hope this email finds you well" or similar filler
+- Short, punchy sentences
+- Maximum 4 sentences (Day 10 can be 5 if including a case study reference)
+
+Write ONLY the message text. No subject line, no explanation, no prefix.`
+
+export function buildDraftPrompt(input: DraftInput): {
+  systemPrompt: string
+  userMessage: string
+} {
+  const objectionText = input.objections.length > 0 ? input.objections.join(', ') : 'none mentioned'
+  return {
+    systemPrompt: DRAFT_SYSTEM,
+    userMessage: `Stage: Day ${input.stageDay}
+Goal: ${STAGE_GOALS[input.stageDay]}
+Lead name: ${input.leadName}
+Company: ${input.company}
+Deal size: ${input.estimatedDealSize ?? 'unknown'}
+Objections raised: ${objectionText}
+Call summary: ${input.callSummary}`,
+  }
+}
+
+export async function generateDraft(input: DraftInput): Promise<string> {
+  const { systemPrompt, userMessage } = buildDraftPrompt(input)
+
+  const response = await getClient().messages.create({
+    model: 'claude-sonnet-4-6',
+    max_tokens: 512,
+    system: systemPrompt,
+    messages: [{ role: 'user', content: userMessage }],
+  })
+
+  const text = response.content[0].type === 'text' ? response.content[0].text : ''
+  return text.trim().replace(/^["']|["']$/g, '')
+}
