@@ -1,0 +1,55 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Lead {
+  id                String             @id @default(uuid())
+  name              String
+  company           String
+  email             String?
+  callDate          DateTime
+  callSummary       String
+  transcriptUrl     String
+  fullTranscript    String
+  estimatedDealSize String?
+  leadSource        String?
+  objections        Json               @default("[]")
+  nextAction        String?
+  status            String             @default("active")
+  notes             String?
+  createdAt         DateTime           @default(now())
+  reminders         FollowUpReminder[]
+}
+
+model FollowUpReminder {
+  id           String    @id @default(uuid())
+  leadId       String
+  lead         Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  stageDay     Int
+  scheduledFor DateTime
+  draftMessage String
+  sentAt       DateTime?
+  createdAt    DateTime  @default(now())
+}
+
+model ProcessedEvent {
+  googleEventId String   @id
+  processedAt   DateTime @default(now())
+}
+
+model GoogleToken {
+  id           Int      @id @default(1)
+  accessToken  String
+  refreshToken String
+  expiry       DateTime
+}
+
+model Settings {
+  id              Int       @id @default(1)
+  slackWebhookUrl String?
+  lastSyncAt      DateTime?
+}
