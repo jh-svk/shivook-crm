@@ -67,4 +67,14 @@ describe('parseClassificationResponse', () => {
     const result = parseClassificationResponse(raw)
     expect(result.isSalesCall).toBe(false)
   })
+
+  it('returns isSalesCall true at exactly 0.7 confidence', () => {
+    const raw = JSON.stringify({ is_sales_call: true, confidence: 0.7, lead_name: 'Test', company: 'Co', email: null, estimated_deal_size: null, lead_source: null, call_summary: 'A call.', objections: [], next_action: null })
+    expect(parseClassificationResponse(raw).isSalesCall).toBe(true)
+  })
+
+  it('returns isSalesCall false when confidence is undefined', () => {
+    const raw = JSON.stringify({ is_sales_call: true, company: 'Co', lead_name: 'Test', email: null, estimated_deal_size: null, lead_source: null, call_summary: null, objections: [], next_action: null })
+    expect(parseClassificationResponse(raw).isSalesCall).toBe(false)
+  })
 })

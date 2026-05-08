@@ -63,12 +63,13 @@ export function parseClassificationResponse(raw: string): ClassificationResult {
   try {
     const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
     const data = JSON.parse(cleaned)
-    if (data.confidence < 0.7) {
-      return { isSalesCall: false, confidence: data.confidence, leadName: null, company: null, email: null, estimatedDealSize: null, leadSource: null, callSummary: null, objections: [], nextAction: null }
+    const confidence = typeof data.confidence === 'number' ? data.confidence : 0
+    if (confidence < 0.7) {
+      return { isSalesCall: false, confidence, leadName: null, company: null, email: null, estimatedDealSize: null, leadSource: null, callSummary: null, objections: [], nextAction: null }
     }
     return {
       isSalesCall: Boolean(data.is_sales_call),
-      confidence: data.confidence,
+      confidence,
       leadName: data.lead_name ?? null,
       company: data.company ?? null,
       email: data.email ?? null,
