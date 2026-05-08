@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { runFollowupChecker } from '@/lib/followup'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST() {
   try {
     await runFollowupChecker()

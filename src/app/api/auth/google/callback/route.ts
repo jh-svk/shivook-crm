@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createOAuthClient } from '@/lib/google'
 import { db } from '@/lib/db'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(req: NextRequest) {
   const code = req.nextUrl.searchParams.get('code')
   if (!code) {
