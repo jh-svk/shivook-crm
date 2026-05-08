@@ -1,7 +1,3 @@
-// CalendarEvent will be used in Task 8 when the full poller is implemented
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { CalendarEvent } from './google'
-
 export function filterNewEvents(
   events: Array<{ id: string; summary: string; attachments?: unknown[] }>,
   processedIds: Set<string>
