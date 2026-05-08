@@ -1,6 +1,10 @@
 import Anthropic from '@anthropic-ai/sdk'
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+let _anthropic: Anthropic | null = null
+function getClient() {
+  if (!_anthropic) _anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+  return _anthropic
+}
 
 export type ClassificationInput = {
   eventTitle: string
@@ -82,7 +86,7 @@ export function parseClassificationResponse(raw: string): ClassificationResult {
 export async function classifyCall(input: ClassificationInput): Promise<ClassificationResult> {
   const { systemPrompt, userMessage } = buildClassificationPrompt(input)
 
-  const response = await anthropic.messages.create({
+  const response = await getClient().messages.create({
     model: 'claude-sonnet-4-6',
     max_tokens: 1024,
     system: systemPrompt,
